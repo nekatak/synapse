@@ -50,6 +50,7 @@ class RoomMemberHandler(object):
         """
         self.hs = hs
         self.store = hs.get_datastore()
+        self.storage = hs.get_storage()
         self.auth = hs.get_auth()
         self.state_handler = hs.get_state_handler()
         self.config = hs.config
@@ -193,7 +194,7 @@ class RoomMemberHandler(object):
             requester, event, context, extra_users=[target], ratelimit=ratelimit
         )
 
-        prev_state_ids = yield context.get_prev_state_ids(self.store)
+        prev_state_ids = yield context.get_prev_state_ids(self.storage)
 
         prev_member_event_id = prev_state_ids.get((EventTypes.Member, user_id), None)
 
@@ -601,7 +602,7 @@ class RoomMemberHandler(object):
         if prev_event is not None:
             return
 
-        prev_state_ids = yield context.get_prev_state_ids(self.store)
+        prev_state_ids = yield context.get_prev_state_ids(self.storage)
         if event.membership == Membership.JOIN:
             if requester.is_guest:
                 guest_can_join = yield self._can_guest_join(prev_state_ids)

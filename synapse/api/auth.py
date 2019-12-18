@@ -71,6 +71,7 @@ class Auth(object):
         self.clock = hs.get_clock()
         self.store = hs.get_datastore()
         self.state = hs.get_state_handler()
+        self.storage = hs.get_storage()
 
         self.token_cache = LruCache(CACHE_SIZE_FACTOR * 10000)
         register_cache("cache", "token_cache", self.token_cache)
@@ -79,7 +80,7 @@ class Auth(object):
 
     @defer.inlineCallbacks
     def check_from_context(self, room_version, event, context, do_sig_check=True):
-        prev_state_ids = yield context.get_prev_state_ids(self.store)
+        prev_state_ids = yield context.get_prev_state_ids(self.storage)
         auth_events_ids = yield self.compute_auth_events(
             event, prev_state_ids, for_verification=True
         )

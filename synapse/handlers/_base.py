@@ -40,6 +40,7 @@ class BaseHandler(object):
             hs (synapse.server.HomeServer):
         """
         self.store = hs.get_datastore()
+        self.storage = hs.get_storage()
         self.auth = hs.get_auth()
         self.notifier = hs.get_notifier()
         self.state_handler = hs.get_state_handler()
@@ -134,7 +135,9 @@ class BaseHandler(object):
             guest_access = event.content.get("guest_access", "forbidden")
             if guest_access != "can_join":
                 if context:
-                    current_state_ids = yield context.get_current_state_ids(self.store)
+                    current_state_ids = yield context.get_current_state_ids(
+                        self.storage
+                    )
                     current_state = yield self.store.get_events(
                         list(current_state_ids.values())
                     )

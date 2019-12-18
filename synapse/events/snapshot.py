@@ -216,7 +216,7 @@ class EventContext:
         return self._state_group
 
     @defer.inlineCallbacks
-    def get_current_state_ids(self, store):
+    def get_current_state_ids(self, storage):
         """
         Gets the room state map, including this event - ie, the state in ``state_group``
 
@@ -234,11 +234,11 @@ class EventContext:
         if self.rejected:
             raise RuntimeError("Attempt to access state_ids of rejected event")
 
-        yield self._ensure_fetched(store)
+        yield self._ensure_fetched(storage)
         return self._current_state_ids
 
     @defer.inlineCallbacks
-    def get_prev_state_ids(self, store):
+    def get_prev_state_ids(self, storage):
         """
         Gets the room state map, excluding this event.
 
@@ -250,7 +250,7 @@ class EventContext:
                 Maps a (type, state_key) to the event ID of the state event matching
                 this tuple.
         """
-        yield self._ensure_fetched(store)
+        yield self._ensure_fetched(storage)
         return self._prev_state_ids
 
     def get_cached_current_state_ids(self):
@@ -270,7 +270,7 @@ class EventContext:
 
         return self._current_state_ids
 
-    def _ensure_fetched(self, store):
+    def _ensure_fetched(self, storage):
         return defer.succeed(None)
 
 
@@ -300,23 +300,25 @@ class _AsyncEventContextImpl(EventContext):
     _event_state_key = attr.ib(default=None)
     _fetching_state_deferred = attr.ib(default=None)
 
-    def _ensure_fetched(self, store):
+    def _ensure_fetched(self, storage):
         if not self._fetching_state_deferred:
             self._fetching_state_deferred = run_in_background(
-                self._fill_out_state, store
+                self._fill_out_state, storage
             )
 
         return make_deferred_yieldable(self._fetching_state_deferred)
 
     @defer.inlineCallbacks
-    def _fill_out_state(self, store):
+    def _fill_out_state(self, storage):
         """Called to populate the _current_state_ids and _prev_state_ids
         attributes by loading from the database.
         """
         if self.state_group is None:
             return
 
-        self._current_state_ids = yield store.get_state_ids_for_group(self.state_group)
+        self._current_state_ids = yield storage.state.get_state_ids_for_group(
+            self.state_group
+        )
         if self._prev_state_id and self._event_state_key is not None:
             self._prev_state_ids = dict(self._current_state_ids)
 

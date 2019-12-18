@@ -62,6 +62,7 @@ class BulkPushRuleEvaluator(object):
     def __init__(self, hs):
         self.hs = hs
         self.store = hs.get_datastore()
+        self.storage = hs.get_storage()
         self.auth = hs.get_auth()
 
         self.room_push_rule_cache_metrics = register_cache(
@@ -116,7 +117,7 @@ class BulkPushRuleEvaluator(object):
 
     @defer.inlineCallbacks
     def _get_power_levels_and_sender_level(self, event, context):
-        prev_state_ids = yield context.get_prev_state_ids(self.store)
+        prev_state_ids = yield context.get_prev_state_ids(self.storage)
         pl_event_id = prev_state_ids.get(POWER_KEY)
         if pl_event_id:
             # fastpath: if there's a power level event, that's all we need, and
@@ -239,6 +240,7 @@ class RulesForRoom(object):
         self.room_id = room_id
         self.is_mine_id = hs.is_mine_id
         self.store = hs.get_datastore()
+        self.storage = hs.get_storage()
         self.room_push_rule_cache_metrics = room_push_rule_cache_metrics
 
         self.linearizer = Linearizer(name="rules_for_room")
@@ -304,7 +306,7 @@ class RulesForRoom(object):
 
                 push_rules_delta_state_cache_metric.inc_hits()
             else:
-                current_state_ids = yield context.get_current_state_ids(self.store)
+                current_state_ids = yield context.get_current_state_ids(self.storage)
                 push_rules_delta_state_cache_metric.inc_misses()
 
             push_rules_state_size_counter.inc(len(current_state_ids))

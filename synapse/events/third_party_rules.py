@@ -28,6 +28,7 @@ class ThirdPartyEventRules(object):
         self.third_party_rules = None
 
         self.store = hs.get_datastore()
+        self.storage = hs.get_storage()
 
         module = None
         config = None
@@ -53,7 +54,7 @@ class ThirdPartyEventRules(object):
         if self.third_party_rules is None:
             return True
 
-        prev_state_ids = yield context.get_prev_state_ids(self.store)
+        prev_state_ids = yield context.get_prev_state_ids(self.storage)
 
         # Retrieve the state events from the database.
         state_events = {}
