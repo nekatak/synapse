@@ -164,6 +164,10 @@ def default_config(name, parse=False):
         # disable user directory updates, because they get done in the
         # background, which upsets the test runner.
         "update_user_directory": False,
+        "database": {
+            "name": "sqlite3",
+            "args": {"database": ":memory:", "cp_min": 1, "cp_max": 1},
+        },
     }
 
     if parse:
@@ -211,6 +215,7 @@ def setup_test_homeserver(
     if "clock" not in kargs:
         kargs["clock"] = MockClock()
 
+    database_config = config.database.databases[0].config
     if USE_POSTGRES_FOR_TESTS:
         test_db = "synapse_test_%s" % uuid.uuid4().hex
 
@@ -225,16 +230,10 @@ def setup_test_homeserver(
                 "cp_max": 5,
             },
         }
-    else:
-        database_config = {
-            "name": "sqlite3",
-            "args": {"database": ":memory:", "cp_min": 1, "cp_max": 1},
-        }
+        database = DatabaseConnectionConfig("master", database_config, ["main"])
+        config.database.databases = [database]
 
-    database = DatabaseConnectionConfig("master", database_config)
-    config.database.databases = [database]
-
-    db_engine = create_engine(database.config)
+    db_engine = create_engine(database_config)
 
     # Create the database before we actually try and connect to it, based off
     # the template database we generate in setupdb()
