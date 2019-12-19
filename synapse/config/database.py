@@ -91,7 +91,10 @@ class DatabaseConfig(Config):
 
         else:
             if database_config is None:
-                database_config = {"name": "sqlite3", "args": {}}
+                if config.get("database_path"):
+                    database_config = {"name": "sqlite3", "args": {}}
+                else:
+                    raise ConfigError("No database configuration provided")
 
             self.databases = [DatabaseConnectionConfig("master", database_config)]
 

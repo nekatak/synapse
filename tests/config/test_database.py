@@ -15,7 +15,7 @@
 
 import yaml
 
-from synapse.config.database import DatabaseConfig
+from synapse.config.database import ConfigError, DatabaseConfig
 
 from tests import unittest
 
@@ -50,3 +50,29 @@ class DatabaseConfigTestCase(unittest.TestCase):
         )
 
         self.assertEqual(conf["database"], database_conf)
+
+    def test_read_db_config_raises_when_no_conf_present(self):
+
+        with self.assertRaises(ConfigError):
+            DatabaseConfig().read_config({})
+
+    def test_db_config_ok_when_database_path_present(self):
+
+        config_dict = {"database_path": "/data_dir_path/homeserver.db"}
+
+        conf = DatabaseConfig()
+        conf.read_config(config_dict)
+
+        self.assertEqual(conf.databases[0].name, "master")
+        self.assertEqual(
+            conf.databases[0].config,
+            {
+                "name": "sqlite3",
+                "args": {
+                    "cp_min": 1,
+                    "cp_max": 1,
+                    "check_same_thread": False,
+                    "database": config_dict["database_path"],
+                },
+            },
+        )
