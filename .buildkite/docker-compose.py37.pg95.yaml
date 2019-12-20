@@ -20,3 +20,7 @@ services:
     working_dir: /src
     volumes:
       - ..:/src
+    command:
+      - "python3.7"
+      - "-c"
+      - "import time;time.sleep(10000000)"
